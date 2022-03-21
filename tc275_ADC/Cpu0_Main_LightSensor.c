@@ -136,8 +136,8 @@ int core0_main(void)
         systick_curr = SYSTEM_TIMER_0_31_0;
         systick = systick_curr - systick_prev;
 
-        // 1s
-        if( systick > 100000000 )
+        // 10ms
+        if( systick > 1000000 )
         {
             systick_prev = systick_curr;
 
