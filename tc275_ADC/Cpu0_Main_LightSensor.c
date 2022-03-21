@@ -108,6 +108,8 @@ unsigned volatile int adcResult;
 unsigned volatile int potential_meter;
 unsigned volatile int light_sensor;
 
+volatile int adc_state;
+
 int core0_main(void)
 {
     IfxCpu_enableInterrupts();
@@ -128,26 +130,33 @@ int core0_main(void)
     init_VADC();                // Initialize VADC
 
     systick_prev = SYSTEM_TIMER_0_31_0;
+    adc_state = 0;
     while(1)
     {
         systick_curr = SYSTEM_TIMER_0_31_0;
         systick = systick_curr - systick_prev;
 
-        // 2s
-        if( systick > 200000000 )
+        // 1s
+        if( systick > 100000000 )
         {
             systick_prev = systick_curr;
-            adcResult = 0;
-            for( int i=0; i<16; i++)
-                adcResult += GetVADC4(7);
-            potential_meter = adcResult>>4;
-            adcResult = 0;
-            for( int i=0; i<16; i++)
-                adcResult += GetVADC4(6);
-            light_sensor = adcResult>>4;
-            printf("Potential Meter: %d\n", potential_meter);
-            printf("Light Sensor: %d\n", light_sensor);
-            printf("\n");
+
+            if( adc_state == 0 )
+            {
+                adc_state = 1;
+                adcResult = 0;
+                for( int i=0; i<16; i++)
+                    adcResult += GetVADC4(7);
+                potential_meter = adcResult>>4;
+            }
+            else
+            {
+                adc_state = 0;
+                adcResult = 0;
+                for( int i=0; i<16; i++)
+                    adcResult += GetVADC4(6);
+                light_sensor = adcResult>>4;
+            }
         }
 
         VADC_startConversion();
