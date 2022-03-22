@@ -113,13 +113,6 @@ int core0_main(void)
         SW_state_prev = SW_state_curr;
         SW_state_curr = (SW2_debounce<<1) | (SW1_debounce<<0);
 
-        if( SW_state_curr != SW_state_prev )
-            SW_state_cnt = 0;
-        else if( SW_state_cnt < 10 )
-            SW_state_cnt ++;
-        else
-            SW_state_debounce = SW_state_curr;
-
         if( SW_state_debounce != 0 )
         {
             potential_meter = GetVADC4(7);
