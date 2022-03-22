@@ -106,6 +106,8 @@ volatile unsigned int interval_time_10ns;
 volatile unsigned int distance_cm_10us;
 volatile unsigned int distance_um_10us;
 volatile unsigned int distance_um_10ns;
+volatile unsigned int distance_um_10ns_lpf;
+volatile unsigned int distance_um_10ns_acc;
 
 volatile unsigned char irq_ultra_sensor;
 
@@ -134,6 +136,10 @@ int core0_main(void)
     init_ultrasonic();
     init_ERU();
     init_CCU60();
+
+
+    distance_um_10ns_acc = 0;
+
     while(1)
     {
         irq_ultra_sensor = 0;
@@ -194,6 +200,15 @@ void ERU0_ISR(void)
         distance_cm_10us = (interval_time_10us*17)/100;         // cm @ 10us timer
         distance_um_10us = (interval_time_10us*1700);           // um @ 10us timer
         distance_um_10ns = (interval_time_10ns*17)/10;          // um @ 10ns system timer
+
+        // moving average
+#define N_LPF_SHIFT     4                                       // 16 average
+        distance_um_10ns_lpf  = distance_um_10ns_acc>>N_LPF_SHIFT;
+        distance_um_10ns_acc -= distance_um_10ns_lpf;
+        if( distance_um_10ns_acc < 0 )
+            distance_um_10ns_acc = 0;
+        distance_um_10ns_acc += distance_um_10ns;
+
         irq_ultra_sensor = 1;
     }
     else                                        // Rising edge
