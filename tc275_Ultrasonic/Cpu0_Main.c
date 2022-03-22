@@ -99,9 +99,20 @@ IfxCpu_syncEvent g_cpuSyncEvent = 0;
 volatile unsigned int timer_cnt;
 volatile unsigned int start_time;
 volatile unsigned int end_time;
-volatile unsigned int interval_time;
-volatile unsigned int distance;
+volatile unsigned int start_time_systick;
+volatile unsigned int end_time_systick;
+volatile unsigned int interval_time_10us;
+volatile unsigned int interval_time_10ns;
+volatile unsigned int distance_cm_10us;
+volatile unsigned int distance_um_10us;
+volatile unsigned int distance_um_10ns;
+
 volatile unsigned char irq_ultra_sensor;
+
+#define SYSTEM_TIMER_0_31_0   *(unsigned int *)(0xF0000000+0x10)
+
+
+
 
 int core0_main(void)
 {
@@ -163,10 +174,13 @@ void ERU0_ISR(void)
     if((PORT15_IN & (1<<P5)) == 0)              // Falling edge
     {
         /* Get distance */
+        end_time_systick = SYSTEM_TIMER_0_31_0;
         end_time = timer_cnt;
 
         // 10us
-        interval_time = end_time - start_time;  // clock per 0.02us
+        interval_time_10us = end_time - start_time;  // clock per 0.02us
+        // 10ns
+        interval_time_10ns = end_time_systick - start_time_systick;
 
         // 340m/s -> 340_00cm/s -> 340_00
         // 1us    -> 1000000/340_00 = 29
@@ -175,12 +189,16 @@ void ERU0_ISR(void)
         // distance = ToF 10us / 5.8 cm
         // distance = ToF 10us 17/100 cm
 
-        //distance = ((interval_time/2)*34000)/1000_00;    // cm
-        distance = (interval_time*17)/100;      // cm
+        //distance = ((interval_time/2)*34000)/1000_00;         // cm
+        //distance_cm = (interval_time*17)/100;                 // cm
+        distance_cm_10us = (interval_time_10us*17)/100;         // cm @ 10us timer
+        distance_um_10us = (interval_time_10us*1700);           // um @ 10us timer
+        distance_um_10ns = (interval_time_10ns*17)/10;          // um @ 10ns system timer
         irq_ultra_sensor = 1;
     }
     else                                        // Rising edge
     {
+        start_time_systick = SYSTEM_TIMER_0_31_0;
         start_time = timer_cnt;
     }
 }
