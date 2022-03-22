@@ -147,12 +147,9 @@ int core0_main(void)
             // FIXME: light sensor scaling
             
             // End of FIXME
-
-            // FIXME:
-            // potential meter  -> LED RED
-            // light sensor     -> LED BLUE
             
-            // End of FIXME
+            potential_meter_duty = (12500*potential_meter)/4095;
+            light_sensor_duty = (12500*light_sensor)/4095;            
 
             GTM_TOM0_CH1_SR0 = 12500 - 1;                       // PWM freq. = 6250 kHz / 12500 = 500 Hz
             GTM_TOM0_CH2_SR0 = 12500 - 1;                       // PWM freq. = 6250 kHz / 12500 = 500 Hz
